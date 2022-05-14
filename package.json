@@ -44,7 +44,11 @@
     "start": "react-scripts start",
     "build": "react-scripts build",
     "test": "react-scripts test",
-    "eject": "react-scripts eject"
+    "eject": "react-scripts eject",
+    "doc:ganache": "commands used on commandline from course",
+    "ganache-compile": "truffle compile --all",
+    "ganache-deploy": "truffle migrate",
+    "ganache-test": "truffle test"
   },
   "eslintConfig": {
     "extends": "react-app"
