@@ -1,6 +1,10 @@
+import {EVM_REVERT, add, convertToWei} from "./convertHelpersEs6.js";
+
 const Token = artifacts.require("./Token");
 require("chai").use(require("chai-as-promised")).should();
 
+// TODO IDSME... openzepplin writes contract implementations... are there also standard test available... for ERC20 that have been implemented? As their counterpart?
+// As they are always the same
 contract("Token", accounts => {
     const owner = accounts[0];
     const user1 = accounts[1];
@@ -48,37 +52,84 @@ contract("Token", accounts => {
         });
     });
 
-    describe("transfer", () => {
+    describe("transfer happy", () => {
 
         it("should transfer 100 tokens to user1", async () => {
 
+            // setup
             let ownerBalance = await token.balanceOf(owner); // expect some big number
-            console.log(ownerBalance.toString());
             let receiverBalance = await token.balanceOf(user1); // expect = 0
 
-            const success = await token.transfer(user1, 100, { from: owner });
+            // action
+            const success = await token.transfer(user1, convertToWei(100), { from: owner });
 
-
-            // get owner balance
+            // assertions
             let newOwnerBalance = await token.balanceOf(owner);
-            console.log(newOwnerBalance.toString());
-
             let newReceiverBalance = await token.balanceOf(user1); // expect = 100
 
-            // debugging
-            // console.log(receiverBalance.toString());
-            // console.log(newReceiverBalance.toString());
+            newReceiverBalance.toString().should.equal(convertToWei(100).toString());
 
-            // expect new balance to equal original balance for owner minus 100
-            newReceiverBalance.toString().should.equal((100).toString());
-            // TODO IDSME works but want below to work as well
-            //newOwnerBalance.toString().should.equal((ownerBalance - 100).toString());
-
+            const result = add(newOwnerBalance, newReceiverBalance);
+            ownerBalance.toString().should.equal(result.toString());
         });
 
-        // it("should not transfer token to user1", async () => {
-        //     await token.transfer(user1, 100).should.be.rejectedWith("revert");
-        // });
+        // test should check for transfer event
+        it("should emit a transfer event", async () => {
+            //action
+            const { logs } = await token.transfer(user1, convertToWei(100), { from: owner });
+
+            //assert v1
+            assert.equal(logs.length, 1);
+            assert.equal(logs[0].event, "Transfer");
+            assert.equal(logs[0].args.from, owner);
+            assert.equal(logs[0].args.to, user1);
+            assert.equal(logs[0].args.value.toString(), convertToWei(100).toString());
+
+            // assert v2
+            logs[0].event.should.equal("Transfer");
+            logs[0].args.from.should.equal(owner);
+            logs[0].args.to.should.equal(user1);
+            logs[0].args.value.toString().should.equal(convertToWei(100).toString());
+
+            // assert v3
+            expect(logs[0].event).to.equal("Transfer");
+            expect(logs[0].args.from).to.equal(owner);
+            expect(logs[0].args.to).to.equal(user1);
+            expect(logs[0].args.value.toString()).to.equal(convertToWei(100).toString());
+        });
+
     });
+
+    describe("ERC20 if transfer unhappy scenarios", () => {
+        it("should throw according to spec", async () => {
+            const amountIsMoreThenTotalSupply = convertToWei(1000000000000);
+            const result = await token.transfer(user1, amountIsMoreThenTotalSupply, { from: owner }).should.be.rejectedWith(EVM_REVERT);
+        })
+
+        it("should throw according to spec, when origin's account balance is to low", async () => {
+            const amountIsMoreThenTotalSupply = convertToWei(1000000000000);
+            const result = await token.transfer(owner , amountIsMoreThenTotalSupply, { from: owner }).should.be.rejectedWith(EVM_REVERT);
+        })
+
+        // Address must be valid?? but what if it is hexadecimals? But not of correct length? Solidity is smart enough to throw it by itself...
+        it('should reject invalid recipient to short', async () => {
+            const invalidRecipient = 0x0;
+            const result = await token.transfer(invalidRecipient, 100, { from: owner }).should.be.rejectedWith('invalid address (arg="_to", coderType="address", value=0)');
+        });
+
+        it('should reject invalid recipient address to long', async () => {
+            const invalidRecipient = 0x03489734758473589743895745789234578934758743859734287583457;
+            const result = await token.transfer(invalidRecipient, 100, { from: owner }).should.be.rejectedWith('invalid address (arg="_to", coderType="address", value=1.4163924335531808e+69');
+        });
+
+        it('should reject invalid recipient address garbage', async () => {
+            const invalidRecipient = "0x01zyz";
+            const result = await token.transfer(invalidRecipient, 100, { from: owner }).should.be.rejectedWith('invalid address (arg="_to", coderType="address", value="0x01zyz"');
+        });
+
+        it('should reject as from is blank', async () => {
+            const result = await token.transfer(user1, 100, { from: '0x0' }).should.be.rejectedWith('Provided address "0x0" is invalid, the capitalization checksum test failed, or its an indrect IBAN address which can\'t be converted.');
+        });
+    })
 
 });

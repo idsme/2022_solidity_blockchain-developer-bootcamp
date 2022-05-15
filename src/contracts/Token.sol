@@ -12,6 +12,7 @@ contract Token{
     uint public totalSupply;
     address public owner;
     mapping (address => uint256) public balances;
+    event Transfer(address indexed from, address indexed to, uint256 value);
 
 
     // add initial supply to whoever deploys contract.
@@ -21,11 +22,12 @@ contract Token{
         owner = msg.sender;
     }
 
-    //transfer tokens to another address
+    // All the ERC20 functions proably all do the same... every time...  always. as is part of the spec.
     function transfer(address _to, uint256 _value) public returns (bool success) {
-        //require(_value <= balances[msg.sender]);
+        require(_value <= balances[msg.sender], "Insufficient balance custom");
         balances[msg.sender] = balances[msg.sender].sub(_value);
         balances[_to] = balances[_to].add(_value);
+        emit Transfer(msg.sender, _to, _value);
         return true;
     }
 
