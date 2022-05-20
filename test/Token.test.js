@@ -8,13 +8,14 @@ require("chai").use(require("chai-as-promised")).should();
 contract("Token", accounts => {
     const owner = accounts[0];
     const user1 = accounts[1];
-    let token
+    const exchange = accounts[2];
+    let token;
 
     beforeEach(async function() {
         token = await Token.new();
     })
 
-    describe("deployment", () => {
+    xdescribe("deployment", () => {
         it("should get token name", async () => {
             const name = await token.name();
             assert.equal(name, "IDSME Token");
@@ -40,7 +41,7 @@ contract("Token", accounts => {
 
     // get balance of address
     // TODO IDSME but if these test run out of order this will fail.
-    describe("balanceOf", () => {
+    xdescribe("balanceOf", () => {
         it("should return the balance of the user1 account", async () => {
             const balance = await token.balanceOf(user1);
             balance.toString().should.equal('0');
@@ -52,7 +53,7 @@ contract("Token", accounts => {
         });
     });
 
-    describe("transfer happy", () => {
+    xdescribe("transfer happy", () => {
 
         it("should transfer 100 tokens to user1", async () => {
 
@@ -100,7 +101,7 @@ contract("Token", accounts => {
 
     });
 
-    describe("ERC20 if transfer unhappy scenarios", () => {
+    xdescribe("ERC20 if transfer unhappy scenarios", () => {
         it("should throw according to spec", async () => {
             const amountIsMoreThenTotalSupply = convertToWei(1000000000000);
             const result = await token.transfer(user1, amountIsMoreThenTotalSupply, { from: owner }).should.be.rejectedWith(EVM_REVERT);
@@ -131,5 +132,29 @@ contract("Token", accounts => {
             const result = await token.transfer(user1, 100, { from: '0x0' }).should.be.rejectedWith('Provided address "0x0" is invalid, the capitalization checksum test failed, or its an indrect IBAN address which can\'t be converted.');
         });
     })
+
+    describe("Approve ERC20 on behalf of owner x limit to transfer", () => {
+        let result;
+        let amount;
+
+        beforeEach(async () => {
+           amount = convertToWei(100);
+           result = await token.approve(exchange, amount, { from: owner });
+        });
+
+        describe("success allocated an allowance for delegated token spending", () => {
+
+            it('should have a 100 tokens as allowance', async () => {
+                const allowance = await token.allowance(owner, exchange);
+                allowance.toString().should.equal(convertToWei(100).toString());
+
+                result.logs[0].event.should.equal("Approval");
+                console.log(result.logs[0].args);
+                result.logs[0].args.owner.should.equal(owner, "owner is not the same");
+                result.logs[0].args.spender.should.equal(exchange, "spender is not the same");
+                result.logs[0].args.value.toString().should.equal(convertToWei(100).toString(), "allowance amount is not a 100 tokens");
+            });
+        });
+    });
 
 });

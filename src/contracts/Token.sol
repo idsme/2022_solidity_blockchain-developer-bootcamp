@@ -13,6 +13,8 @@ contract Token{
     address public owner;
     mapping (address => uint256) public balances;
     event Transfer(address indexed from, address indexed to, uint256 value);
+    event Approval(address indexed owner, address indexed spender, uint256 value);
+    mapping (address => mapping (address => uint256)) public allowance;
 
 
     // add initial supply to whoever deploys contract.
@@ -28,6 +30,24 @@ contract Token{
         balances[msg.sender] = balances[msg.sender].sub(_value);
         balances[_to] = balances[_to].add(_value);
         emit Transfer(msg.sender, _to, _value);
+        return true;
+    }
+
+    function transferFrom(address _from, address _to, uint256 _value) public returns (bool success) {
+// TODO IDSME FIND OUT IF REDUNDANT. As may be build in by default.
+//        require(_value <= balances[_from], "Insufficient balance custom");
+//        require(_value <= balances[_from].sub(balances[_from].div(2)), "Insufficient balance custom");
+        allowance[_from][msg.sender] = allowance[_from][msg.sender].sub(_value);
+        balances[_from] = balances[_from].sub(_value);
+        balances[_to] = balances[_to].add(_value);
+
+        emit Transfer(_from, _to, _value);
+        return true;
+    }
+
+    function approve(address _spender, uint256 _value) public returns (bool success) {
+        allowance[msg.sender][_spender] = _value;
+        emit Approval(msg.sender, _spender, _value);
         return true;
     }
 
