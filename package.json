@@ -1,4 +1,5 @@
 {
+  "NODE_VERSION_TO_USE": "v17.3.1",
   "name": "bootcamp",
   "version": "0.2.0",
   "description": "Decentralized Ethereum Token Exchange",
