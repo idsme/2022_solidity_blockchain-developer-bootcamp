@@ -27,3 +27,5 @@ exports.add = (A, B) => {
 
 
 exports.EVM_REVERT = "VM Exception while processing transaction: revert";
+
+exports.EVM_REJECTED_INVALID_ADDRESS = "invalid address (arg=\"_to\", coderType=\"address\", value=0)";

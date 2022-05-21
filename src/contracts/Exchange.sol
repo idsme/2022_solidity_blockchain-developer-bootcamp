@@ -1,4 +1,7 @@
-pragma solidity ^0.5.0;
+pragma solidity ^0.8.0;
+
+// SPDX-License-Identifier: UNLICENSED
+
 import "./Token.sol";
 // Deposit & Withdraw Funds
 // Manage Order - Make or Cancel
@@ -17,7 +20,7 @@ import "./Token.sol";
 // [] Charge fees
 
 // import save match openzepplin library
-import "openzeppelin-solidity/contracts/math/SafeMath.sol";
+import "openzeppelin-solidity/contracts/utils/math/SafeMath.sol";
 
 contract Exchange {
 
@@ -26,7 +29,7 @@ contract Exchange {
     uint256 public feePercentage;
     event Transfer(address indexed from, address indexed to, uint256 value);
 
-    constructor(address _feeAccount, uint256 _feePercentage) public {
+    constructor(address _feeAccount, uint256 _feePercentage) {
         owner = msg.sender;
         feeAccount = _feeAccount;
         feePercentage = _feePercentage;
