@@ -1,7 +1,7 @@
 import {EVM_REVERT, add, convertToWei} from "./convertHelpersEs6.js";
-import convert from "lodash/fp/convert";
 
-const Token = artifacts.require("./Exchange");
+
+const Token = artifacts.require("./Token");
 const Contract = artifacts.require("./Exchange");
 require("chai").use(require("chai-as-promised")).should();
 
@@ -9,8 +9,8 @@ require("chai").use(require("chai-as-promised")).should();
 // As they are always the same
 contract("Exchange", accounts => {
     const owner = accounts[0];
-    const feeAccount = accounts[1];
     const user1 = accounts[2];
+    const feeAccount = accounts[3];
     const feePercentage = 10;
     const amount = convertToWei(10);
     let contract;
@@ -19,50 +19,68 @@ contract("Exchange", accounts => {
     beforeEach(async function() {
         contract = await Contract.new(feeAccount, feePercentage);
         token = await Token.new();
-        await token.transfer(contract.address, amount, {from: owner});
     })
 
     describe("deployment", () => {
-        it("should get contract.owner", async () => {
-            const value = await contract.owner;
-            value.to.should.equal(owner);
+        it("should get contract.feeAccount", async () => {
+            const value = await contract.feeAccount();
+            value.should.equal(feeAccount);
         });
 
-        xit("should get contract.feeAccount", async () => {
-            const value = await contract.freeAccount();
-            value.should.equal(freeAccount);
-        });
-
-        xit("should get contract.feeAccount", async () => {
+        it("should get contract.feePercentage", async () => {
             const value = await contract.feePercentage();
             value.toString().should.equal("10");
         });
+
+        it("should get contract.owner", async () => {
+            const value = await contract.owner();
+            value.should.equal(owner);
+        });
+
     });
 
-    xdescribe("Depositing tokens into exchange", () => {
+    describe("Depositing tokens into exchange", () => {
         let result;
 
-
         beforeEach(async function() {
-            await token.approve(contract.address, amount, {from: user1});
-            result = contract.deposit(token.address, amount, {from: user1});
+            await token.transfer(user1, amount, {from: owner});
+            let balanceOfUser1 = await token.balanceOf(user1);
+            balanceOfUser1.toString().should.equal(amount.toString());
+            //console.log("exchange: " + blanceOfUser1);
+
+            //await token.approve(exchange, amount, { from: owner });
+            await token.approve(contract.address, amount, {from: user1}); // checked.
+            const allowance = await token.allowance(user1, contract.address);
+            allowance.toString().should.equal(amount.toString());
+
+            console.log("token address: " + token.address);
+            result = contract.depositToken(token.address, amount, {from: user1});
         })
 
-        describe("Deposit tokens happy scenarios", () => {
+        describe("Success", () => {
 
             it('should tracks the token deposit', async() => {
-                const balance = await token.balanceOf(contract.address);
-                balance.toString().should.equal(convertToWei(10).toString());
-                // original account should decrease by 10.
-                // balance of user1 should increase by 10 on exchange
-            });
+                const exchangeBalance = await token.balanceOf(contract.address);
+                // balance of exchange on token should increase by 10
+                console.log("token.exchangeBalance: " + exchangeBalance.toString());
+                exchangeBalance.toString().should.equal(amount.toString());
 
+                // original account should decrease by 10.
+                // const balanceOwner = await token.balanceOf(owner);
+                // balanceOwner.toString().should.equal(convertToWei(1234557).toString();
+
+
+                console.log("token.address.it: " + token.address);
+                // const balanceUser1Exchange = await contract.tokens(token.address, user1);
+                // console.log("exchange.balanceUser1: " + balanceUser1Exchange);
+                // balanceUser1Exchange.toString().should.equal(amount.toString());
+            });
         });
 
-        describe("Deposit tokens unhappy scenarios", () => {
+        describe("Failure", () => {
+            it('not enough allowance', function () {
 
+            });
         });
     });
-
-
 });
