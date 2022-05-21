@@ -1,4 +1,5 @@
-import {EVM_REVERT, add, convertToWei} from "./convertHelpersEs6.js";
+import {EVM_REJECTED_INVALID_ADDRESS, EVM_REVERT, add, convertToWei} from "./convertHelpersEs6.js";
+import { ethers } from "ethers";
 
 const Token = artifacts.require("./Token");
 require("chai").use(require("chai-as-promised")).should();
@@ -15,7 +16,7 @@ contract("Token", accounts => {
         token = await Token.new();
     })
 
-    xdescribe("deployment", () => {
+    describe("Deployment", () => {
         it("should get token name", async () => {
             const name = await token.name();
             assert.equal(name, "IDSME Token");
@@ -41,7 +42,7 @@ contract("Token", accounts => {
 
     // get balance of address
     // TODO IDSME but if these test run out of order this will fail.
-    xdescribe("balanceOf", () => {
+    describe("BalanceOf", () => {
         it("should return the balance of the user1 account", async () => {
             const balance = await token.balanceOf(user1);
             balance.toString().should.equal('0');
@@ -53,7 +54,7 @@ contract("Token", accounts => {
         });
     });
 
-    xdescribe("transfer happy", () => {
+    describe("Transfer", () => {
 
         it("should transfer 100 tokens to user1", async () => {
 
@@ -63,6 +64,7 @@ contract("Token", accounts => {
 
             // action
             const success = await token.transfer(user1, convertToWei(100), { from: owner });
+            //console.log("success full transfer: ", success);
 
             // assertions
             let newOwnerBalance = await token.balanceOf(owner);
@@ -101,7 +103,7 @@ contract("Token", accounts => {
 
     });
 
-    xdescribe("ERC20 if transfer unhappy scenarios", () => {
+    describe("Fail - transfer - unhappy scenarios", () => {
         it("should throw according to spec", async () => {
             const amountIsMoreThenTotalSupply = convertToWei(1000000000000);
             const result = await token.transfer(user1, amountIsMoreThenTotalSupply, { from: owner }).should.be.rejectedWith(EVM_REVERT);
@@ -133,7 +135,7 @@ contract("Token", accounts => {
         });
     })
 
-    describe("Approve ERC20 on behalf of owner x limit to transfer", () => {
+    describe("Delegated transfer", () => {
         let result;
         let amount;
 
@@ -144,17 +146,61 @@ contract("Token", accounts => {
 
         describe("success allocated an allowance for delegated token spending", () => {
 
+            it('allocates an allowance for delegated token spending', async () => {
+                const allowance = await token.allowance(owner, exchange);
+                allowance.toString().should.equal(convertToWei(100).toString());
+            });
+
             it('should have a 100 tokens as allowance', async () => {
                 const allowance = await token.allowance(owner, exchange);
                 allowance.toString().should.equal(convertToWei(100).toString());
 
                 result.logs[0].event.should.equal("Approval");
-                console.log(result.logs[0].args);
                 result.logs[0].args.owner.should.equal(owner, "owner is not the same");
                 result.logs[0].args.spender.should.equal(exchange, "spender is not the same");
                 result.logs[0].args.value.toString().should.equal(convertToWei(100).toString(), "allowance amount is not a 100 tokens");
             });
+
+            it("should delegate transfer 100 tokens to exchange", async () => {
+                // Test preconditions are correct
+                const allowance = await token.allowance(owner, exchange);
+                allowance.toString().should.equal(convertToWei(100).toString());
+
+                // Anyone can call the "approve" method to delegate the allowance to another account
+                // Te exchange has be approved to spend 100 tokens in before each
+                // Wat are current balances?
+                let ownerBalance = await token.balanceOf(owner); // expect begin value 1234567 tokens
+                ownerBalance.toString().should.equal(convertToWei(1234567).toString());
+                let user1Balance = await token.balanceOf(user1); // expect = 0 => not only the owner should be able to do a transferFrom
+                let exchangeBalance = await token.balanceOf(exchange); // expect = 0 as approve does not really transfer items
+                exchangeBalance.toString().should.equal(convertToWei(0).toString());
+
+                // owner has all tokens... send to receiver... and exchange is doing it. Exchange can send it to any address.
+                const success = await token.transferFrom(owner, user1, convertToWei(100), { from: exchange });
+
+                // assertions
+                let newOwnerBalance = await token.balanceOf(owner); // expect = 1234567 - 100
+                let newReceiverBalance = await token.balanceOf(user1); // expect = 100
+
+                // receiver === exchange should have balance increased by 100
+                newReceiverBalance.toString().should.equal(convertToWei(100).toString());
+                newOwnerBalance.toString().should.equal(convertToWei(1234467).toString()); 1234567 - 100
+
+                const result = add(newOwnerBalance, newReceiverBalance);
+                ownerBalance.toString().should.equal(result.toString());
+            });
+
+            describe("Fail - transferFrom - unhappy scenarios", () => {
+                it(" rejects insufficient amounts", async () => {
+                    // Attempt transfer of too many tokens
+                    const result = await token.transferFrom(owner, exchange, convertToWei(123345678), { from: owner }).should.be.rejectedWith(EVM_REVERT);
+                });
+
+                it("rejects transfer to a invalid recipient address", async () => {
+                    // Attempt transfer by invalid receiver
+                    const result = await token.transferFrom(owner, 0x0, convertToWei(12345678), { from: owner }).should.be.rejectedWith(EVM_REJECTED_INVALID_ADDRESS);
+                });
+            });
         });
     });
-
 });
