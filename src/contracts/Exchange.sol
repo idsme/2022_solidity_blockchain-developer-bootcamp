@@ -24,6 +24,9 @@ import "openzeppelin-solidity/contracts/utils/math/SafeMath.sol";
 
 contract Exchange {
 
+    using SafeMath for uint256;
+
+
     address public owner;
     address public feeAccount;
     uint256 public feePercentage;
