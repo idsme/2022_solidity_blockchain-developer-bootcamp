@@ -43,11 +43,11 @@ contract Exchange {
         // DONE Send token to this contract
         // Manage depositToken
         // DONE Emit event
-        require(Token(_token).transferFrom(msg.sender, address(this), _amount)); // exchaange move tokens to itself
-        tokens[_token][msg.sender] = 321; // Test old - transfer === new allowance level
+        require(Token(_token).transferFrom(msg.sender, address(this), _amount)); // exchange move tokens to itself
+        tokens[_token][msg.sender] = tokens[_token][msg.sender] + _amount; // IDSME BUG should use safeMath here but import does not work during compile time. Something is not configured right for this contract.
 
-        //        require(_amount > 0, "Amount must be greater than 0");
-//        require(msg.value == 0, "Deposit Ether not supported");
+        // require(_amount > 0, "Amount must be greater than 0");
+        //   require(msg.value == 0, "Deposit Ether not supported");
 
         // Create instance of this token that is on blockchain
         // The msg.sender===from wants to deposit
