@@ -60,20 +60,22 @@ contract("Exchange", accounts => {
         describe("Success", () => {
 
             it('should tracks the token deposit', async() => {
+                console.log("starting test");
                 const exchangeBalance = await token.balanceOf(contract.address);
                 // balance of exchange on token should increase by 10
-                console.log("token.exchangeBalance: " + exchangeBalance.toString());
+                console.log("token.exchangeBalance should be 10===" + exchangeBalance.toString());
                 exchangeBalance.toString().should.equal(amount.toString());
 
                 // original account should decrease by 10.
-                // const balanceOwner = await token.balanceOf(owner);
-                // balanceOwner.toString().should.equal(convertToWei(1234557).toString();
+                const balanceOwner = await token.balanceOf(owner);
+                console.log("token.balanceOwner should be decreased to: 1234557===" + balanceOwner.toString());
+                balanceOwner.toString().should.equal(convertToWei(1234557).toString());
 
 
                 console.log("token.address.it: " + token.address);
-                // const balanceUser1Exchange = await contract.tokens(token.address, user1);
-                // console.log("exchange.balanceUser1: " + balanceUser1Exchange);
-                // balanceUser1Exchange.toString().should.equal(amount.toString());
+                const balanceUser1Exchange = await contract.tokens(token.address, user1);
+                console.log("exchange.balanceUser1: " + balanceUser1Exchange);
+                balanceUser1Exchange.toString().should.equal(amount.toString());
             });
         });
 
