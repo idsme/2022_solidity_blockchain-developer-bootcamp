@@ -1,6 +1,7 @@
 import {EVM_REVERT, add, convertToWei} from "./convertHelpersEs6.js";
 
-
+//const { artifacts } = require("truffle"); // Crashes stuff.
+// import { artifacts } from "truffle"; not working
 const Token = artifacts.require("./Token");
 const Contract = artifacts.require("./Exchange");
 require("chai").use(require("chai-as-promised")).should();
@@ -18,10 +19,14 @@ contract("Exchange", accounts => {
 
     beforeEach(async function() {
         contract = await Contract.new(feeAccount, feePercentage);
+        const ms = 1;
+        console.log("sleeping for " + ms + " ms");
+        await timeout(ms);
+        console.log("Done sleepting in before!");
         token = await Token.new();
     })
 
-    describe("deployment", () => {
+   xdescribe("deployment", () => {
         it("should get contract.feeAccount", async () => {
             const value = await contract.feeAccount();
             value.should.equal(feeAccount);
@@ -36,7 +41,6 @@ contract("Exchange", accounts => {
             const value = await contract.owner();
             value.should.equal(owner);
         });
-
     });
 
     describe("Depositing tokens into exchange", () => {
@@ -54,12 +58,12 @@ contract("Exchange", accounts => {
             allowance.toString().should.equal(amount.toString());
 
             console.log("token address: " + token.address);
-            result = contract.depositToken(token.address, amount, {from: user1});
+            result = await contract.depositToken(token.address, amount, {from: user1});
         })
 
         describe("Success", () => {
 
-            it('should tracks the token deposit', async() => {
+            xit('should tracks the token deposit', async() => {
                 console.log("starting test");
                 const exchangeBalance = await token.balanceOf(contract.address);
                 // balance of exchange on token should increase by 10
@@ -71,11 +75,23 @@ contract("Exchange", accounts => {
                 console.log("token.balanceOwner should be decreased to: 1234557===" + balanceOwner.toString());
                 balanceOwner.toString().should.equal(convertToWei(1234557).toString());
 
-
                 console.log("token.address.it: " + token.address);
                 const balanceUser1Exchange = await contract.tokens(token.address, user1);
                 console.log("exchange.balanceUser1: " + balanceUser1Exchange);
                 balanceUser1Exchange.toString().should.equal(amount.toString());
+            });
+
+            it('should emit a Deposit Event', async () => {
+                const log = result.logs[0];
+                log.event.should.eq('Deposit');
+                const event = log.args;
+                console.log('Deposit Event', event);
+                event.token.should.equal(token.address);
+                event.from.should.equal(user1);
+                console.log('event.value:', event.value);
+                console.log('event.balance:', event.balance);
+                event.value.toString().should.equal(amount.toString());
+                event.balance.toString().should.equal(amount.toString());
             });
         });
 
@@ -86,3 +102,8 @@ contract("Exchange", accounts => {
         });
     });
 });
+
+
+function timeout(ms) {
+    return new Promise(resolve => setTimeout(resolve, ms));
+}
