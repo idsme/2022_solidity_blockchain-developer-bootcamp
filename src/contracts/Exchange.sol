@@ -30,7 +30,8 @@ contract Exchange {
     address public owner;
     address public feeAccount;
     uint256 public feePercentage;
-    event Transfer(address indexed from, address indexed to, uint256 value);
+    address constant ETHER = address(0); // store Ether in tokens mapping with blank address
+    event Deposit(address indexed token, address indexed from, uint256 value, uint256 balance);
     // [token][useraddress]
     mapping (address => mapping (address => uint256)) public tokens;
 
@@ -38,6 +39,11 @@ contract Exchange {
         owner = msg.sender;
         feeAccount = _feeAccount;
         feePercentage = _feePercentage;
+    }
+
+    function depositEther() public payable {
+        tokens[ETHER][msg.sender] = tokens[ETHER][msg.sender].add(msg.value);
+        emit Deposit(ETHER, msg.sender, msg.value, tokens[ETHER][msg.sender] );
     }
 
     function depositToken(address _token, uint256 _amount) public payable {
@@ -55,7 +61,7 @@ contract Exchange {
         // Create instance of this token that is on blockchain
         // The msg.sender===from wants to deposit
         // address(this)=== this contract === to wants to receive the tokens.
-        emit Transfer(msg.sender, address(this), _amount);
+        emit Deposit(_token, msg.sender, _amount, tokens[_token][msg.sender]);
     }
 
 }
