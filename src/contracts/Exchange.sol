@@ -63,4 +63,17 @@ contract Exchange {
         emit Deposit(_token, msg.sender, _amount, tokens[_token][msg.sender]);
     }
 
+    function withdrawEther(uint256 _amount) public {
+
+        tokens[ETHER][msg.sender] = tokens[ETHER][msg.sender].sub(_amount);
+
+
+//        require(tokens[ETHER][msg.sender] > 0, "Insufficient balance");
+//        // transfer ether to msg.sender
+//        const currentBalance = tokens[ETHER][msg.sender] = 0;
+//        tokens[ETHER][msg.sender] = 0;
+//        require(Token(ETHER).transferFrom(address(this), msg.sender, currentBalance));
+//        emit Deposit(ETHER, msg.sender, tokens[ETHER][msg.sender], 0);
+    }
+
 }

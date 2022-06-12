@@ -41,7 +41,7 @@ contract("Exchange", accounts => {
         });
     });
 
-    describe("Deposit Ether", () => {
+    xdescribe("Deposit Ether", () => {
 
         let result;
 
@@ -69,7 +69,40 @@ contract("Exchange", accounts => {
 
     });
 
-    describe("Depositing tokens into exchange", () => {
+    describe("Withdraw Ether", () => {
+
+        let result;
+        beforeEach(async () => {
+            result = await contract.depositEther({from: user2, value: amount});
+        });
+
+        describe("success", () => {
+            beforeEach(async () => {
+                result = await contract.withdrawEther(amount, {from: user2});
+            });
+
+            it('with withdraw Ether', async () => {
+                const balanceUser2Exchange = await contract.tokens(ETHER_ADDRESS, user2);
+                console.log("exchange.balanceUser2: " + balanceUser2Exchange);
+                balanceUser2Exchange.toString().should.equal('0');
+            });
+
+            xit('should emit a WithDraw Event', async () => { //to implement
+                const log = result.logs[0];
+                //console.log("log: " + log);
+                log.event.should.eq('Deposit');
+                const event = log.args;
+                console.log('Deposit Event', event);
+                event.token.should.equal(ETHER_ADDRESS, "token address not equal to ETHER_ADDRESS");
+                event.from.should.equal(user2, "user2 address not equal");
+                event.value.toString().should.equal(amount.toString(), "msg.value not equal amount");
+                event.balance.toString().should.equal(amount.toString(), "balance not equal amount");
+            });
+        });
+
+    });
+
+    xdescribe("Depositing tokens into exchange", () => {
         let result;
 
         beforeEach(async function() {
@@ -121,7 +154,7 @@ contract("Exchange", accounts => {
             });
         });
 
-        describe("Failure", () => {
+        xdescribe("Failure", () => {
             it('not enough allowance', function () {
                 return contract.depositToken(token.address, amount_larger_then_balance, {from: user1})
                     .should.be.rejectedWith("VM Exception while processing transaction: revert Insufficient balance -- Reason given: Insufficient balance.");
