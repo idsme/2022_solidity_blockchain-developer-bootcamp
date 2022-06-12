@@ -26,7 +26,6 @@ contract Exchange {
 
     using SafeMath for uint256;
 
-
     address public owner;
     address public feeAccount;
     uint256 public feePercentage;
@@ -41,7 +40,7 @@ contract Exchange {
         feePercentage = _feePercentage;
     }
 
-    function depositEther() public payable {
+    function depositEther() payable public  {
         tokens[ETHER][msg.sender] = tokens[ETHER][msg.sender].add(msg.value);
         emit Deposit(ETHER, msg.sender, msg.value, tokens[ETHER][msg.sender] );
     }
