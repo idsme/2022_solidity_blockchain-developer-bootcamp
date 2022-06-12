@@ -1,4 +1,4 @@
-import {EVM_REVERT, add, convertToWei} from "./convertHelpersEs6.js";
+import {EVM_REVERT, add, convertToWei, ETHER_ADDRESS} from "./convertHelpersEs6.js";
 
 //const { artifacts } = require("truffle"); // Crashes stuff.
 // import { artifacts } from "truffle"; not working
@@ -12,21 +12,19 @@ contract("Exchange", accounts => {
     const owner = accounts[0];
     const user1 = accounts[2];
     const feeAccount = accounts[3];
+    const user2 = accounts[4];
     const feePercentage = 10;
-    const amount = convertToWei(10);
+    const amount = convertToWei(1);
+    const amount_larger_then_balance = convertToWei(1234567890);
     let contract;
     let token;
 
-    beforeEach(async function() {
+    beforeEach(async () =>{
         contract = await Contract.new(feeAccount, feePercentage);
-        const ms = 1;
-        console.log("sleeping for " + ms + " ms");
-        await timeout(ms);
-        console.log("Done sleepting in before!");
         token = await Token.new();
     })
 
-   xdescribe("deployment", () => {
+   describe("deployment", () => {
         it("should get contract.feeAccount", async () => {
             const value = await contract.feeAccount();
             value.should.equal(feeAccount);
@@ -41,6 +39,34 @@ contract("Exchange", accounts => {
             const value = await contract.owner();
             value.should.equal(owner);
         });
+    });
+
+    describe("Deposit Ether", () => {
+
+        let result;
+
+        beforeEach(async () => {
+            result = await contract.depositEther({from: user2, value: amount});
+        });
+
+        it('deposit Ether', async () => {
+            const balanceUser2Exchange = await contract.tokens(ETHER_ADDRESS, user2);
+            console.log("exchange.balanceUser2: " + balanceUser2Exchange);
+            balanceUser2Exchange.toString().should.equal(amount.toString());
+        });
+
+        it('should emit a Deposit Event', async () => {
+            const log = result.logs[0];
+            //console.log("log: " + log);
+            log.event.should.eq('Deposit');
+            const event = log.args;
+            console.log('Deposit Event', event);
+            event.token.should.equal(ETHER_ADDRESS, "token address not equal to ETHER_ADDRESS");
+            event.from.should.equal(user2, "user2 address not equal");
+            event.value.toString().should.equal(amount.toString(), "msg.value not equal amount");
+            event.balance.toString().should.equal(amount.toString(), "balance not equal amount");
+        });
+
     });
 
     describe("Depositing tokens into exchange", () => {
@@ -63,7 +89,7 @@ contract("Exchange", accounts => {
 
         describe("Success", () => {
 
-            xit('should tracks the token deposit', async() => {
+            it('should tracks the token deposit', async() => {
                 console.log("starting test");
                 const exchangeBalance = await token.balanceOf(contract.address);
                 // balance of exchange on token should increase by 10
@@ -73,7 +99,7 @@ contract("Exchange", accounts => {
                 // original account should decrease by 10.
                 const balanceOwner = await token.balanceOf(owner);
                 console.log("token.balanceOwner should be decreased to: 1234557===" + balanceOwner.toString());
-                balanceOwner.toString().should.equal(convertToWei(1234557).toString());
+                balanceOwner.toString().should.equal(convertToWei(1234566).toString());
 
                 console.log("token.address.it: " + token.address);
                 const balanceUser1Exchange = await contract.tokens(token.address, user1);
@@ -97,13 +123,16 @@ contract("Exchange", accounts => {
 
         describe("Failure", () => {
             it('not enough allowance', function () {
-
+                return contract.depositToken(token.address, amount_larger_then_balance, {from: user1})
+                    .should.be.rejectedWith("VM Exception while processing transaction: revert Insufficient balance -- Reason given: Insufficient balance.");
             });
         });
+
+
+
     });
+
+
 });
 
 
-function timeout(ms) {
-    return new Promise(resolve => setTimeout(resolve, ms));
-}
