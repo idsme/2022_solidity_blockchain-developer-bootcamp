@@ -46,6 +46,7 @@
     "start": "react-scripts start",
     "build": "react-scripts build",
     "test": "react-scripts test",
+    "test-exchange": "truffle test ./test/Exchange.test.js",
     "eject": "react-scripts eject",
     "doc:ganache": "commands used on commandline from course",
     "ganache-compile": "truffle compile --all",
