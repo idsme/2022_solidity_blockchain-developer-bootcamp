@@ -135,7 +135,7 @@ contract("Exchange", accounts => {
             result = await contract.depositToken(token.address, amount, {from: user1});
         })
 
-        xdescribe("Success", () => {
+        describe("Success", () => {
 
             it('should tracks the token deposit', async() => {
                 console.log("starting test");
@@ -153,6 +153,11 @@ contract("Exchange", accounts => {
                 const balanceUser1Exchange = await contract.tokens(token.address, user1);
                 console.log("exchange.balanceUser1: " + balanceUser1Exchange);
                 balanceUser1Exchange.toString().should.equal(amount.toString());
+            });
+
+            it('should return balance of token/user', async () => {
+                result = await contract.balanceOf(token.address, user1);
+                result.toString().should.equal(convertToWei(1).toString());
             });
 
             it('should emit a Deposit Event', async () => {
@@ -177,7 +182,7 @@ contract("Exchange", accounts => {
         });
 
 
-        describe("Withdraw Token", () => {
+        xdescribe("Withdraw Token", () => {
 
             let result;
             beforeEach(async () => {
