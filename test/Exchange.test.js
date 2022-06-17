@@ -74,6 +74,7 @@ contract("Exchange", accounts => {
         let result;
         beforeEach(async () => {
             result = await contract.depositEther({from: user2, value: amount});
+            // TODO IDSME Above If user1 it does not work.. Don't know why find out later. Probably something to do with decreasing balance. Of the different tests.
         });
 
         describe("success", () => {
@@ -87,17 +88,26 @@ contract("Exchange", accounts => {
                 balanceUser2Exchange.toString().should.equal('0');
             });
 
-            xit('should emit a WithDraw Event', async () => { //to implement
+            it('should emit a WithDraw Event', async () => { //to implement
                 const log = result.logs[0];
                 //console.log("log: " + log);
-                log.event.should.eq('Deposit');
+                log.event.should.eq('Withdraw');
                 const event = log.args;
-                console.log('Deposit Event', event);
+                // console.log('Withdraw Event', event);
                 event.token.should.equal(ETHER_ADDRESS, "token address not equal to ETHER_ADDRESS");
                 event.from.should.equal(user2, "user2 address not equal");
                 event.value.toString().should.equal(amount.toString(), "msg.value not equal amount");
-                event.balance.toString().should.equal(amount.toString(), "balance not equal amount");
+                event.balance.toString().should.equal('0', "balance not equal amount");
             });
+        });
+
+        xdescribe("failure", () => {
+            beforeEach(async () => {
+                const balanceUser2Exchange = await contract.tokens(ETHER_ADDRESS, user2);
+                result = await contract.withdrawEther(balanceUser2Exchange + 1, {from: user2});
+            });
+
+
         });
 
     });
@@ -144,7 +154,7 @@ contract("Exchange", accounts => {
                 const log = result.logs[0];
                 log.event.should.eq('Deposit');
                 const event = log.args;
-                console.log('Deposit Event', event);
+//                console.log('Deposit Event', event);
                 event.token.should.equal(token.address);
                 event.from.should.equal(user1);
                 console.log('event.value:', event.value);

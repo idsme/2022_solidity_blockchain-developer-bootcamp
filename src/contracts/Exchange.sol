@@ -31,6 +31,7 @@ contract Exchange {
     uint256 public feePercentage;
     address constant ETHER = address(0); // store Ether in tokens mapping with blank address
     event Deposit(address indexed token, address indexed from, uint256 value, uint256 balance);
+    event Withdraw(address indexed token, address indexed from, uint256 value, uint256 balance);
     // [token][useraddress]
     mapping (address => mapping (address => uint256)) public tokens;
 
@@ -63,10 +64,11 @@ contract Exchange {
         emit Deposit(_token, msg.sender, _amount, tokens[_token][msg.sender]);
     }
 
-    function withdrawEther(uint256 _amount) public {
-
+    function withdrawEther(uint256 _amount) public payable {
+        require(tokens[ETHER][msg.sender] >= _amount);
         tokens[ETHER][msg.sender] = tokens[ETHER][msg.sender].sub(_amount);
-
+        payable(msg.sender).transfer(_amount);
+        emit Withdraw(ETHER, msg.sender, _amount, tokens[ETHER][msg.sender]);
 
 //        require(tokens[ETHER][msg.sender] > 0, "Insufficient balance");
 //        // transfer ether to msg.sender
