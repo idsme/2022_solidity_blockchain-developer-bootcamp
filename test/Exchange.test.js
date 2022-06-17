@@ -101,10 +101,14 @@ contract("Exchange", accounts => {
             });
         });
 
-        xdescribe("failure", () => {
+        describe("failure", () => {
+            let balanceUser2Exchange = null;
             beforeEach(async () => {
-                const balanceUser2Exchange = await contract.tokens(ETHER_ADDRESS, user2);
-                result = await contract.withdrawEther(balanceUser2Exchange + 1, {from: user2});
+                balanceUser2Exchange = await contract.tokens(ETHER_ADDRESS, user2);
+            });
+
+            it('should rejects withdraws for insufficient balances', async () => {
+                result = await contract.withdrawEther(balanceUser2Exchange + 1, {from: user2}).should.be.rejectedWith(EVM_REVERT);
             });
 
 
