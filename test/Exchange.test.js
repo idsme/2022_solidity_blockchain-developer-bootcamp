@@ -219,6 +219,11 @@ contract("Exchange", accounts => {
                     result = await contract.withdrawTokens(token.address, balanceUser1Exchange + 1, {from: user1}).should.be.rejectedWith(EVM_REVERT);
                 });
 
+                it('should rejects as address is ether address which should be withdrawn with a different function', async () => {
+                    // withdraw to much
+                    result = await contract.withdrawTokens(ETHER_ADDRESS, 0, {from: user1}).should.be.rejectedWith(EVM_REVERT);
+                });
+
 
             });
 
