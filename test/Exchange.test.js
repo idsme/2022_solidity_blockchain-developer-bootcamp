@@ -108,6 +108,7 @@ contract("Exchange", accounts => {
             });
 
             it('should rejects withdraws for insufficient balances', async () => {
+                // withdraw to much
                 result = await contract.withdrawEther(balanceUser2Exchange + 1, {from: user2}).should.be.rejectedWith(EVM_REVERT);
             });
 
