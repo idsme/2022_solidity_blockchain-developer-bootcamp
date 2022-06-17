@@ -69,7 +69,7 @@ contract("Exchange", accounts => {
 
     });
 
-    describe("Withdraw Ether", () => {
+    xdescribe("Withdraw Ether", () => {
 
         let result;
         beforeEach(async () => {
@@ -117,7 +117,7 @@ contract("Exchange", accounts => {
 
     });
 
-    xdescribe("Depositing tokens into exchange", () => {
+    describe("Depositing tokens into exchange", () => {
         let result;
 
         beforeEach(async function() {
@@ -135,7 +135,7 @@ contract("Exchange", accounts => {
             result = await contract.depositToken(token.address, amount, {from: user1});
         })
 
-        describe("Success", () => {
+        xdescribe("Success", () => {
 
             it('should tracks the token deposit', async() => {
                 console.log("starting test");
@@ -177,6 +177,52 @@ contract("Exchange", accounts => {
         });
 
 
+        describe("Withdraw Token", () => {
+
+            let result;
+            beforeEach(async () => {
+                // TODO IDSME Above If user1 it does not work.. Don't know why find out later. Probably something to do with decreasing balance. Of the different tests.
+            });
+
+            describe("success", () => {
+                beforeEach(async () => {
+                    result = await contract.withdrawTokens(token.address, amount, {from: user1});
+                });
+
+                it('with withdraw Tokens', async () => {
+                    const balanceUser1Exchange = await contract.tokens(ETHER_ADDRESS, user1);
+                    console.log("exchange.balanceUser1: " + balanceUser1Exchange);
+                    balanceUser1Exchange.toString().should.equal('0');
+                });
+
+                it('should emit a WithDraw Event', async () => { //to implement
+                    const log = result.logs[0];
+                    //console.log("log: " + log);
+                    log.event.should.eq('Withdraw');
+                    const event = log.args;
+                    // console.log('Withdraw Event', event);
+                    event.token.should.equal(token.address, "token address not equal to TOKEN_ADDRESS");
+                    event.from.should.equal(user1, "user1 address not equal");
+                    event.value.toString().should.equal(amount.toString(), "msg.value not equal amount");
+                    event.balance.toString().should.equal('0', "balance not equal amount");
+                });
+            });
+
+            describe("failure", () => {
+                let balanceUser1Exchange = null;
+                beforeEach(async () => {
+                    balanceUser1Exchange = await contract.tokens(token.address, user1);
+                });
+
+                it('should rejects withdraws for insufficient balances', async () => {
+                    // withdraw to much
+                    result = await contract.withdrawTokens(token.address, balanceUser1Exchange + 1, {from: user1}).should.be.rejectedWith(EVM_REVERT);
+                });
+
+
+            });
+
+        });
 
     });
 
