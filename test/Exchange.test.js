@@ -24,7 +24,7 @@ contract("Exchange", accounts => {
         token = await Token.new();
     })
 
-   describe("deployment", () => {
+   xdescribe("deployment", () => {
         it("should get contract.feeAccount", async () => {
             const value = await contract.feeAccount();
             value.should.equal(feeAccount);
@@ -117,7 +117,7 @@ contract("Exchange", accounts => {
 
     });
 
-    describe("Depositing tokens into exchange", () => {
+    xdescribe("Depositing tokens into exchange", () => {
         let result;
 
         beforeEach(async function() {
@@ -236,6 +236,50 @@ contract("Exchange", accounts => {
 
     });
 
+    describe("Making orders", () => {
+
+        let result;
+        beforeEach(async () => {
+            // make an order paying with ETH and convert to Idsme.
+            result = await contract.makeOrder(token.address, convertToWei(1), ETHER_ADDRESS, convertToWei(1), {from: user2});
+        });
+
+        describe("success", () => {
+            beforeEach(async () => {
+            });
+
+            it('should have made 1 order and saved it', async () => {
+                const orderCount = await contract.orderCount();
+                orderCount.toString().should.equal('1');
+            });
+
+            xit('should emit a Make Order Event', async () => { //to implement
+                const log = result.logs[0];
+                //console.log("log: " + log);
+                log.event.should.eq('MakeOrder');
+                const event = log.args;
+                // console.log('Withdraw Event', event);
+                event.token.should.equal(ETHER_ADDRESS, "token address not equal to ETHER_ADDRESS");
+                event.from.should.equal(user2, "user2 address not equal");
+                event.value.toString().should.equal(amount.toString(), "msg.value not equal amount");
+                event.balance.toString().should.equal('0', "balance not equal amount");
+            });
+        });
+
+        xdescribe("failure", () => {
+            let balanceUser2OnExchangeInEther = null;
+            beforeEach(async () => {
+                balanceUser2OnExchangeInEther = await contract.tokens(ETHER_ADDRESS, user2);
+            });
+
+            it('should rejects make order', async () => {
+                // should not make order.. when balance on exchange is to low in start currency.
+                result = await contract.withdrawEther(balanceUser2OnExchangeInEther + 1, {from: user2}).should.be.rejectedWith(EVM_REVERT);
+            });
+
+        });
+
+    });
 
 });
 
