@@ -9,11 +9,11 @@ import "./Token.sol";
 
 // TODO:
 // [x] Set the fee account
-// [] Deposit Ether
-// [] Withdraw Ether
-// [] Deposit Tokens
-// [] Withdraw Tokens
-// [] Check balances
+// [X] Deposit Ether
+// [X] Withdraw Ether
+// [X] Deposit Tokens
+// [X] Withdraw Tokens
+// [X] Check balances
 // [] Make  Order
 // [] Cancel Order
 // [] Fill Order
