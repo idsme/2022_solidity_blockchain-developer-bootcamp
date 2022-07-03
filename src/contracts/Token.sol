@@ -15,10 +15,12 @@ contract Token{
     uint public decimals = 18;
     uint public totalSupply;
     address public owner;
+
     mapping (address => uint256) public balances;
+    mapping (address => mapping (address => uint256)) public allowance;
+
     event Transfer(address indexed from, address indexed to, uint256 value);
     event Approval(address indexed owner, address indexed spender, uint256 value);
-    mapping (address => mapping (address => uint256)) public allowance;
 
 
     // add initial supply to whoever deploys contract.
