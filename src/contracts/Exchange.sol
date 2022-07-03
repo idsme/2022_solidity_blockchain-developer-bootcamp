@@ -32,8 +32,29 @@ contract Exchange {
     address constant ETHER = address(0); // store Ether in tokens mapping with blank address
     event Deposit(address indexed token, address indexed from, uint256 value, uint256 balance);
     event Withdraw(address indexed token, address indexed from, uint256 value, uint256 balance);
+    event CreatedOrder(uint id, address user, address tokenGet, uint256 amountGet, address tokenGive, uint256 amountGive, uint256 timestamp);
+
     // [token][useraddress]
     mapping (address => mapping (address => uint256)) public tokens;
+
+    struct _Order {
+        uint256 id;
+        address user;
+        address tokenGet;
+        uint256 amountGet;
+        address tokenGive;
+        uint256 amountGive;
+        uint256 timestamp;
+    }
+
+    mapping (uint256 =>_Order) public orders;
+
+    // A way to model the order
+    // store the order.
+    // Add order to storage and retrieve
+
+    uint256 public orderCount;
+
 
     constructor(address _feeAccount, uint256 _feePercentage) {
         owner = msg.sender;
@@ -85,5 +106,18 @@ contract Exchange {
         return tokens[_token][_user];
     }
 
+    function makeOrder(address _tokenGet, uint256 _amountGet, address _tokenGive, uint256 _amountGive) public {
+        // test if has enough of _token Give.@author
+        // require(tokens[_token][msg.sender] >= _amount);
 
+        // Fill order ?? Should this be some where else?
+        // Only if price is possible.. as this is a limit order fill the order???
+        // Some where we need to get the price from and check it against the order... to validate over time if order filling is possible.
+        // tokens[_tokenGive][msg.sender] = tokens[_tokenGive][msg.sender].sub(_amount); // reduce amount tokenGive
+        // tokens[_tokenGet][msg.sender] = tokens[_tokenGet][msg.sender].sub(_amount); // add amount tokenGet
+
+        orderCount = orderCount.add(1);
+        orders[orderCount] =  _Order(orderCount, msg.sender, _tokenGet, _amountGet, _tokenGive, _amountGive, block.timestamp);
+        emit CreatedOrder(orderCount, msg.sender, _tokenGet, _amountGet, _tokenGive, _amountGive, block.timestamp);
+    }
 }
